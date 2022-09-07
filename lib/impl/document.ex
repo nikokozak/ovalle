@@ -13,6 +13,20 @@ defmodule Ovalle.Document do
     size: integer(),
     meta: map()
   }
+
+  defstruct [
+    :id, 
+    :abs_path, 
+    :rel_path, 
+    :type, 
+    :rootname, 
+    :original_filename,
+    :hash, 
+    :collection, 
+    :size, 
+    :meta, 
+    added_at: DateTime.utc_now()
+  ]
   
   @callback new(filepath :: String.t) :: t()
   @callback different?(old :: t, new :: t) :: t()
