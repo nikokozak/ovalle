@@ -1,4 +1,4 @@
 import Config
 
 config :ovalle,
-  test_dir: "_tmp"
+  archive_dir: "_tmp"

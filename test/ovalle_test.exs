@@ -3,7 +3,7 @@ defmodule OvalleTest do
   doctest Ovalle
 
   test "reads config" do
-    assert is_binary(Application.fetch_env!(:ovalle, :test_dir))
+    assert is_binary(Application.fetch_env!(:ovalle, :archive_dir))
     assert_raise ArgumentError, fn ->
       Application.fetch_env!(:ovalle, :non_existant_env)
     end
