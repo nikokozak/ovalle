@@ -8,4 +8,5 @@ defmodule OvalleTest do
       Application.fetch_env!(:ovalle, :non_existant_env)
     end
   end
+
 end
