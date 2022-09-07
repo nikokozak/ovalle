@@ -11,6 +11,7 @@ defmodule Ovalle.Document do
     collection: String.t,
     added_at: DateTime.t(),
     size: integer(),
+    searchable: boolean,
     meta: map()
   }
 
@@ -23,12 +24,17 @@ defmodule Ovalle.Document do
     :original_filename,
     :hash, 
     :collection, 
+    :added_at,
     :size, 
+    :searchable,
     :meta, 
-    :added_at
   ]
-  
-  @callback new(filepath :: String.t) :: t()
-  @callback different?(old :: t, new :: t) :: t()
+
+  @doc """
+  `ingest/1` is a callback implemented by specific filetype modules,
+  allowing for different pipelines for ingesting documents and performing
+  actions on them.
+  """
+  @callback ingest(filepath :: String.t) :: t()
 
 end
