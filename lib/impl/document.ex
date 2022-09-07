@@ -25,7 +25,7 @@ defmodule Ovalle.Document do
     :collection, 
     :size, 
     :meta, 
-    added_at: DateTime.utc_now()
+    :added_at
   ]
   
   @callback new(filepath :: String.t) :: t()
