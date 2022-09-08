@@ -138,6 +138,15 @@ defmodule Ovalle.FileUtils do
   end
 
   @doc """
+  Creates a hash binary from a file.
+  """
+  @spec hash!(path_to_file :: String.t) :: String.t
+  def hash!(path_to_file) do
+    File.read!(path_to_file)
+    |> (&(:crypto.hash(:md5, &1))).()
+  end
+
+  @doc """
   Cleans a filename.
 
   ## Examples

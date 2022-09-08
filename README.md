@@ -3,7 +3,6 @@
 # TODO
 
 - Dockerize for dev
-- Add name cleanup / normalization
 - Add utilities for crawling, flattening archives
 - Add hashing of files for version checking
 - Add utility for identifying already-imported collection (plant a file)

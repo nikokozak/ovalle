@@ -98,5 +98,19 @@ defmodule FileUtilTest do
     file = "/once/again/1 .after. all this ${%}@time.ex"
     assert {"/once/again/1_after_all_this_time.ex", file} == clean_name(file)
   end
+
+  test "hash!/1" do
+    file = "test_file"
+    File.write!(file, "some content")
+
+    hash = hash!(file)
+    
+    File.write!(file, "some other content")
+
+    hash_2 = hash!(file)
+
+    refute hash == hash_2
+    assert is_binary(hash) and is_binary(hash_2)
+  end
   
 end
