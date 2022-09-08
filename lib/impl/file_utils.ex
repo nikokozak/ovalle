@@ -4,6 +4,10 @@ defmodule Ovalle.FileUtils do
   Provides utilities for working with files.
   """
 
+  # TODO: Nested collections
+  # TODO: Set -> Original
+  # TODO: Sets are hidden sets
+
   @doc """
   Returns the base directory for the archive, as defined in the config as
   `:archive_dir`.
@@ -13,19 +17,21 @@ defmodule Ovalle.FileUtils do
 
   ######################################## 
 
+  @spec collection_path(collection_names :: list(String.t)) :: String.t
+  defp collection_path(collection_names) when is_list(collection_names), do: join([ base_dir() | collection_names ])
   @spec collection_path(collection_name :: String.t) :: String.t
-  defp collection_path(collection_name), do: join(base_dir(), collection_name)
+  defp collection_path(collection_name), do: collection_path([collection_name])
 
-  @spec set_path(collection_name :: String.t, set_name :: String.t) :: String.t
-  defp set_path(collection_name, set_name), do: join([base_dir(), collection_name, set_name])
+  @spec set_path(collection_name_or_names :: String.t | list(String.t), set_name :: String.t) :: String.t
+  defp set_path(collection_name_or_names, set_name), do: join(collection_path(collection_name_or_names), set_name)
 
   ######################################## 
 
   @doc """
   Checks whether a collection exists in the archive.
   """
-  @spec collection_exists?(collection_name :: String.t) :: boolean
-  def collection_exists?(collection_name), do: File.exists?(join(base_dir(), collection_name))
+  @spec collection_exists?(collection_name_or_names :: String.t | list(String.t)) :: boolean
+  def collection_exists?(collection_name_or_names), do: File.exists?(collection_path(collection_name_or_names))
 
   @doc """
   Checks whether a set exists in the archive. Note that this will not fail if the 
@@ -36,13 +42,25 @@ defmodule Ovalle.FileUtils do
 
   @doc """
   Creates a collection in the archive. Returns an error tuple if the collection
-  already exists.
+  already exists. If creating a nested collection, will only error if the final
+  sub-collection already exists.
   """
-  @spec create_collection(collection_name :: String.t) :: :ok | {:error, :eexist}
-  def create_collection(collection_name) do
+  @spec create_collection(collection_name_or_names :: String.t | list(String.t)) :: :ok | {:error, :eexist}
+  def create_collection(collection_name_or_names) do
+    do_create_collection(List.flatten([collection_name_or_names]), base_dir())
+  end
+  defp do_create_collection([collection_name], cwd) when is_binary(collection_name) do
+    path = join(cwd, collection_name)
     cond do
-      collection_exists?(collection_name) -> {:error, :eexist}
-      true -> File.mkdir collection_path(collection_name)
+      File.exists?(path) -> {:error, :eexist}
+      true -> File.mkdir!(path)
+    end
+  end
+  defp do_create_collection([collection_name | rest], cwd) do
+    path = join(cwd, collection_name)
+    cond do
+      File.exists?(path) -> do_create_collection(rest, path)
+      true -> File.mkdir!(path); do_create_collection(rest, path)
     end
   end
 
@@ -50,10 +68,10 @@ defmodule Ovalle.FileUtils do
   Deletes a collection in the archive. Will return an error if the collection
   doesn't exist. If success, returns a tuple with the names of the deleted files.
   """
-  @spec delete_collection(collection_name :: String.t) :: {:ok, [String.t]} | {:error, :no_collection}
-  def delete_collection(collection_name) do
+  @spec delete_collection(collection_name_or_names :: String.t | list(String.t)) :: {:ok, [String.t]} | {:error, :no_collection}
+  def delete_collection(collection_name_or_names) do
     cond do
-      collection_exists?(collection_name) -> File.rm_rf collection_path(collection_name)
+      collection_exists?(collection_name_or_names) -> File.rm_rf collection_path(collection_name_or_names)
       true -> {:error, :no_collection}
     end
   end

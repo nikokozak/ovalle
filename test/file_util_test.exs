@@ -3,6 +3,7 @@ defmodule FileUtilTest do
   import Ovalle.FileUtils
 
   @collection "ARMY"
+  @nested_collection ["ARMY", "Argentina", "Kozak"]
   @set "a-new-set"
 
   setup do
@@ -13,7 +14,7 @@ defmodule FileUtilTest do
 
   describe "collection utils" do
 
-    test "create_collection/1" do
+    test "create_collection/1 creates single collection" do
       collection_path = Path.join(base_dir(), @collection)
       refute File.exists?(collection_path)
       :ok = create_collection(@collection)
@@ -21,13 +22,29 @@ defmodule FileUtilTest do
       {:error, :eexist} = create_collection(@collection)
     end
 
-    test "delete_collection/1" do
-      collection_path = Path.join(base_dir(), @collection)
+    test "create_collection/1 creates nested collections" do
+      refute collection_exists?(@nested_collection)
+      :ok = create_collection(@nested_collection)
+      assert collection_exists?(@nested_collection)
+      {:error, :eexist} = create_collection(@collection)
+    end
+
+    test "delete_collection/1 deletes a single collection" do
       :ok = create_collection(@collection)
-      assert File.exists?(collection_path)
+      assert collection_exists?(@collection)
 
       {:ok, _} = delete_collection(@collection)
-      refute File.exists?(collection_path)
+      refute collection_exists?(@collection)
+
+      {:error, :no_collection} = delete_collection(@collection)
+    end
+
+    test "delete_collection/1 deletes all connections nested beneath it" do
+      :ok = create_collection(@nested_collection)
+      assert collection_exists?(@nested_collection)
+
+      {:ok, _} = delete_collection(@collection)
+      refute collection_exists?(@collection)
 
       {:error, :no_collection} = delete_collection(@collection)
     end
