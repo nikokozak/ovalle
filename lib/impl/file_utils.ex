@@ -137,4 +137,34 @@ defmodule Ovalle.FileUtils do
     end
   end
 
+  @doc """
+  Cleans a filename.
+
+  ## Examples
+  
+    iex> Ovalle.FileUtils.clean_name("/once/again/1 .after. all this ${%}@time.ex")
+    { "/once/again/1_after_all_this_time.ex", "/once/again/1 .after. all this ${%}@time.ex" }
+  """
+  @spec clean_name(filename :: String.t) :: {cleaned :: String.t, original :: String.t}
+  def clean_name(filename) do
+    dirs = dirpath(filename)
+    extension = Path.extname(filename)
+    root = Path.basename(filename) |> Path.rootname()
+
+    filter = ["~", "`", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "=", "+", "[", "{", "]", "}", "\\", "|", ";", ":", "\"", "'", "&#8216;", "&#8217;", "&#8220;", "&#8221;", "&#8211;", "&#8212;", "â€”", "â€“", ",", "<", ".", ">", "/", "?"]
+
+    cleaned = String.replace(root, filter, "")
+              |> String.replace(~r/\s+/, "_")
+              |> String.replace(~r/[^0-9a-zA-Z_-]/, "")
+
+    { join(dirs, cleaned <> extension), filename }
+  end
+
+  defp dirpath(filename) do
+    case Path.dirname(filename) do
+      "." -> ""
+      path -> path
+    end
+  end
+
 end

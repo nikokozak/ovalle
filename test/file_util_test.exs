@@ -93,5 +93,10 @@ defmodule FileUtilTest do
     end
 
   end
+
+  test "clean_name/1" do
+    file = "/once/again/1 .after. all this ${%}@time.ex"
+    assert {"/once/again/1_after_all_this_time.ex", file} == clean_name(file)
+  end
   
 end
