@@ -40,14 +40,39 @@ defmodule Ovalle.FileUtils do
     extension = Path.extname(filename)
     root = Path.basename(filename) |> Path.rootname()
 
-    filter = ["~", "`", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "=", "+", "[", "{", "]", "}", "\\", "|", ";", ":", "\"", "'", "&#8216;", "&#8217;", "&#8220;", "&#8221;", "&#8211;", "&#8212;", "â€”", "â€“", ",", "<", ".", ">", "/", "?"]
-
-    cleaned = String.replace(root, filter, "")
-              |> String.replace(~r/\s+/, "_")
-              |> String.replace(~r/[^0-9a-zA-Z_-]/, "")
+    cleaned = clean(root)
 
     { join(dirs, cleaned <> extension), filename }
   end
+
+  defp clean("/"), do: "/"
+  defp clean(string) do
+    filter = ["~", "`", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "=", "+", "[", "{", "]", "}", "\\", "|", ";", ":", "\"", "'", "&#8216;", "&#8217;", "&#8220;", "&#8221;", "&#8211;", "&#8212;", "â€”", "â€“", ",", "<", ".", ">", "/", "?"]
+
+    String.replace(string, filter, "")
+    |> String.replace(~r/\s+/, "_")
+    |> String.replace(~r/[^0-9a-zA-Z_-]/, "")
+  end
+
+  @doc """
+  Cleans all portions of a path, returning the cleaned version and the original in a tuple.
+  """
+  @spec clean_path_and_name(filename :: String.t) :: {cleaned :: String.t, original :: String.t}
+  def clean_path_and_name(filename) do
+    dirs = dirpath(filename)
+    file = Path.basename(filename)
+
+    clean_dirs = Path.split(dirs) 
+                 |> Enum.map(&clean/1)
+                 |> joinpath
+
+    {clean_file, _} = clean_name(file)
+
+    {Path.join(clean_dirs, clean_file), filename}
+  end
+
+  defp joinpath([]), do: ""
+  defp joinpath(path), do: Path.join(path)
 
   defp dirpath(filename) do
     case Path.dirname(filename) do

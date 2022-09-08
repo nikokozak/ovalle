@@ -15,10 +15,12 @@ defmodule Ovalle.FileUtils.Document do
   Copies a document into a collection.
   """
   @spec copy_into_collection(collection_name_or_names :: String.t | list(String.t), path_to_file :: String.t) :: :ok | {:error, :no_collection}
-  def copy_into_collection(collection_name_or_names, path_to_file) do
+  def copy_into_collection(collection_name_or_names, path_to_file, opts \\ []) do
+    new_filename = Keyword.get(opts, :new_filename, Path.basename(path_to_file))
     cond do
       not Collection.exists?(collection_name_or_names) -> {:error, :no_collection}
-      true -> File.cp!(path_to_file, path(collection_name_or_names, path_to_file))
+      true -> 
+        File.cp!(path_to_file, path(collection_name_or_names, new_filename))
     end
   end
 

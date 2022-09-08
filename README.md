@@ -3,7 +3,6 @@
 # TODO
 
 - Dockerize for dev
-- Add utilities for crawling, flattening archives
 - Add utility for identifying already-imported collection (plant a file)
 - Add utilities to diff import folders
 - Add state tracker to store all transformations of file as it goes through the process
