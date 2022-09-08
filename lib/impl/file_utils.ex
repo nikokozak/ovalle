@@ -1,12 +1,14 @@
 defmodule Ovalle.FileUtils do
   import Path, only: [join: 2, join: 1]
-  @moduledoc """
-  Provides utilities for working with files.
-  """
 
-  # TODO: Nested collections
-  # TODO: Set -> Original
-  # TODO: Sets are hidden sets
+  @moduledoc """
+  Provides utilities for working with files. 
+
+  `collection`s can be nested.
+  `set`s are hidden folders named based on a given document, containing other documents derived
+  from the original.
+  `document`s are the base files that are stored in the system.
+  """
 
   @doc """
   Returns the base directory for the archive, as defined in the config as
@@ -23,7 +25,13 @@ defmodule Ovalle.FileUtils do
   defp collection_path(collection_name), do: collection_path([collection_name])
 
   @spec set_path(collection_name_or_names :: String.t | list(String.t), set_name :: String.t) :: String.t
-  defp set_path(collection_name_or_names, set_name), do: join(collection_path(collection_name_or_names), set_name)
+  defp set_path(collection_name_or_names, filename) do
+    set_name = set_name_from_filename(filename)
+    join(collection_path(collection_name_or_names), set_name)
+  end
+
+  @spec document_path(collection_name_or_names :: String.t | list(String.t), filename :: String.t) :: String.t
+  defp document_path(collection_name_or_names, filename), do: join(collection_path(collection_name_or_names), filename)
 
   ######################################## 
 
@@ -34,11 +42,16 @@ defmodule Ovalle.FileUtils do
   def collection_exists?(collection_name_or_names), do: File.exists?(collection_path(collection_name_or_names))
 
   @doc """
-  Checks whether a set exists in the archive. Note that this will not fail if the 
-  collection the set is supposed to live under doesn't exist.
+  Checks whether a document exists inside a given collection.
   """
-  @spec set_exists?(collection_name :: String.t, set_name :: String.t) :: boolean
-  def set_exists?(collection_name, set_name), do: File.exists?(join([base_dir(), collection_name, set_name]))
+  @spec document_exists?(collection_name_or_names :: String.t | list(String.t), filename :: String.t) :: boolean
+  def document_exists?(collection_name_or_names, filename), do: File.exists?(document_path(collection_name_or_names, filename))
+
+  @doc """
+  Checks whether a set exists for a given file in the archive. Note that this will not fail if the collection the set is supposed to live under doesn't exist (it will simply return false).
+  """
+  @spec set_exists?(collection_name_or_names :: String.t | list(String.t), set_name :: String.t) :: boolean
+  def set_exists?(collection_name_or_names, filename), do: File.exists?(set_path(collection_name_or_names, filename))
 
   @doc """
   Creates a collection in the archive. Returns an error tuple if the collection
@@ -77,15 +90,26 @@ defmodule Ovalle.FileUtils do
   end
 
   @doc """
+  Returns the name of the hidden set folder for a given filename.
+
+  ## Examples
+  
+    iex> Ovalle.FileUtils.set_name_from_filename("a-file.pdf")
+    ".a-file-set"
+  """
+  @spec set_name_from_filename(filename :: String.t) :: String.t
+  def set_name_from_filename(filename), do: ".#{Path.basename(filename) |> Path.rootname}-set"
+
+  @doc """
   Creates a set within a collection. Will fail if the collection isn't present in the
   archive, or if the collection already exists.
   """
-  @spec create_set(collection_name :: String.t, set_name :: String.t) :: :ok | {:error, :eexist} | {:error, :no_collection}
-  def create_set(collection_name, set_name) do
+  @spec create_set_for(collection_name_or_names :: String.t | list(String.t), filename :: String.t) :: :ok | {:error, :eexist} | {:error, :no_collection}
+  def create_set_for(collection_name_or_names, filename) do
     cond do
-      not collection_exists?(collection_name) -> {:error, :no_collection}
-      set_exists?(collection_name, set_name) -> {:error, :eexist}
-      true -> File.mkdir set_path(collection_name, set_name)
+      not collection_exists?(collection_name_or_names) -> {:error, :no_collection}
+      set_exists?(collection_name_or_names, filename) -> {:error, :eexist}
+      true -> File.mkdir set_path(collection_name_or_names, filename)
     end
   end
 
@@ -93,12 +117,12 @@ defmodule Ovalle.FileUtils do
   Deletes a set within a collection. Will fail if the collection doesn't exist, or if the 
   set doesn't exist.
   """
-  @spec delete_set(collection_name :: String.t, set_name :: String.t) :: {:ok, [String.t]} | {:error, :no_collection} | {:error, :no_set}
-  def delete_set(collection_name, set_name) do
+  @spec delete_set_for(collection_name_or_names :: String.t, filename :: String.t) :: {:ok, [String.t]} | {:error, :no_collection} | {:error, :no_set}
+  def delete_set_for(collection_name, filename) do
     cond do
       not collection_exists?(collection_name) -> {:error, :no_collection}
-      not set_exists?(collection_name, set_name) -> {:error, :no_set}
-      set_exists?(collection_name, set_name) -> File.rm_rf set_path(collection_name, set_name)
+      not set_exists?(collection_name, filename) -> {:error, :no_set}
+      set_exists?(collection_name, filename) -> File.rm_rf set_path(collection_name, filename)
     end
   end
 

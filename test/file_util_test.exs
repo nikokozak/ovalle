@@ -4,7 +4,7 @@ defmodule FileUtilTest do
 
   @collection "ARMY"
   @nested_collection ["ARMY", "Argentina", "Kozak"]
-  @set "a-new-set"
+  @set_file "a-new-set.pdf"
 
   setup do
     archive_dir = Application.fetch_env!(:ovalle, :archive_dir)
@@ -53,30 +53,27 @@ defmodule FileUtilTest do
 
   describe "set utils" do
 
-    test "create_set/2" do
-      set_path = Path.join([base_dir(), @collection, @set])
+    test "create_set_for/2" do
+      {:error, :no_collection} = create_set_for(@nested_collection, @set_file)
 
-      {:error, :no_collection} = create_set(@collection, @set)
+      :ok = create_collection(@nested_collection)
+      refute set_exists?(@nested_collection, @set_file)
 
-      :ok = create_collection(@collection)
-      refute File.exists?(set_path)
+      :ok = create_set_for(@nested_collection, @set_file)
+      assert set_exists?(@nested_collection, @set_file)
 
-      :ok = create_set(@collection, @set)
-      assert File.exists?(set_path)
-
-      {:error, :eexist} = create_set(@collection, @set)
+      {:error, :eexist} = create_set_for(@nested_collection, @set_file)
     end
 
-    test "delete_set/2" do
-      set_path = Path.join([base_dir(), @collection, @set])
-      :ok = create_collection(@collection)
-      :ok = create_set(@collection, @set)
+    test "delete_set_for/2" do
+      :ok = create_collection(@nested_collection)
+      :ok = create_set_for(@nested_collection, @set_file)
 
-      {:error, :no_collection} = delete_set("a-non-existant-collection", @set)
-      assert File.exists?(set_path)
-      {:ok, [_]} = delete_set(@collection, @set)
-      refute File.exists?(set_path)
-      {:error, :no_set} = delete_set(@collection, @set)
+      {:error, :no_collection} = delete_set_for("a-non-existant-collection", @set_file)
+      assert set_exists?(@nested_collection, @set_file)
+      {:ok, [_]} = delete_set_for(@nested_collection, @set_file)
+      refute set_exists?(@nested_collection, @set_file)
+      {:error, :no_set} = delete_set_for(@nested_collection, @set_file)
     end
 
   end
