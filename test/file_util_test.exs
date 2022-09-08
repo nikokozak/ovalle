@@ -77,5 +77,21 @@ defmodule FileUtilTest do
     end
 
   end
+
+  describe "document utils" do
+
+    test "copy_document_into_collection/2" do
+      file = "test_file.pdf"
+      File.touch!(file)
+      {:error, :no_collection} = copy_document_into_collection(@nested_collection, file)
+      :ok = create_collection(@nested_collection)
+      :ok = copy_document_into_collection(@nested_collection, file)
+      
+      assert document_exists?(@nested_collection, file)
+
+      File.rm!(file)
+    end
+
+  end
   
 end

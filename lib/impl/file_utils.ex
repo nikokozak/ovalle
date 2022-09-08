@@ -48,6 +48,17 @@ defmodule Ovalle.FileUtils do
   def document_exists?(collection_name_or_names, filename), do: File.exists?(document_path(collection_name_or_names, filename))
 
   @doc """
+  Copies a document into a collection.
+  """
+  @spec copy_document_into_collection(collection_name_or_names :: String.t | list(String.t), path_to_file :: String.t) :: :ok | {:error, :no_collection}
+  def copy_document_into_collection(collection_name_or_names, path_to_file) do
+    cond do
+      not collection_exists?(collection_name_or_names) -> {:error, :no_collection}
+      true -> File.cp!(path_to_file, document_path(collection_name_or_names, path_to_file))
+    end
+  end
+
+  @doc """
   Checks whether a set exists for a given file in the archive. Note that this will not fail if the collection the set is supposed to live under doesn't exist (it will simply return false).
   """
   @spec set_exists?(collection_name_or_names :: String.t | list(String.t), set_name :: String.t) :: boolean
